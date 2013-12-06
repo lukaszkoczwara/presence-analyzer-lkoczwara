@@ -57,8 +57,7 @@ def presence_weekday_view(user_id):
     """
     data = utils.get_data()
     if user_id not in data:
-        log.debug('User %s not found!', user_id)
-        return []
+        abort(401, 'User {} not found!'.format(user_id))
 
     weekdays = utils.group_by_weekday(data[user_id])
     result = [(calendar.day_abbr[weekday], sum(intervals))
@@ -76,8 +75,7 @@ def presence_start_end_view(user_id):
     """
     data = utils.get_data()
     if user_id not in data:
-        log.debug('User %s not found!', user_id)
-        return []
+        abort(401, 'User {} not found!'.format(user_id))
 
     weekdays = utils.group_start_end_times_by_weekday(data[user_id])
     result = [
