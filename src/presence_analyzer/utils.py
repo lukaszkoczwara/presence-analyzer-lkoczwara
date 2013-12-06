@@ -8,7 +8,7 @@ from json import dumps
 from functools import wraps
 from datetime import datetime
 
-from flask import Response
+from flask import Response, abort
 
 from presence_analyzer.main import app
 
@@ -97,3 +97,17 @@ def mean(items):
     Calculates arithmetic mean. Returns zero for empty lists.
     """
     return float(sum(items)) / len(items) if len(items) > 0 else 0
+
+
+def group_start_end_times_by_weekday(items):
+    """
+    Groups start and end times in sec. by weekday.
+    """
+
+    result = {i: {'start': [], 'end': []} for i in range(7)}
+    for date, start_end in items.iteritems():
+        start = start_end['start']
+        end = start_end['end']
+        result[date.weekday()]['start'].append(seconds_since_midnight(start))
+        result[date.weekday()]['end'].append(seconds_since_midnight(end))
+    return result
