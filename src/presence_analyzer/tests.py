@@ -7,7 +7,7 @@ import json
 import datetime
 import unittest
 
-from presence_analyzer import main, views, utils
+from presence_analyzer import main, utils
 
 
 TEST_DATA_CSV = os.path.join(
@@ -91,6 +91,24 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         data = json.loads(resp.data)
         self.assertEqual(data, [])
 
+    def test_presence_start_end_view(self):
+        """
+        Test returning total presence time of valid and invalid user.
+        """
+        resp = self.client.get('/api/v1/presence_start_end/10')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.content_type, 'application/json')
+        data = json.loads(resp.data)
+        self.assertEqual(len(data), 7)
+        self.assertEqual(data[0], [u'Mon', 0, 0])
+
+        # user with id=56 does not exist
+        resp = self.client.get('/api/v1/presence_start_end/56')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.content_type, 'application/json')
+        data = json.loads(resp.data)
+        self.assertEqual(data, [])
+
 
 class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
     """
@@ -168,6 +186,19 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
 
         result = utils.mean([])
         self.assertEqual(result, 0)
+
+    def test_group_start_end_times_by_weekday(self):
+        """
+        Test grouping of start and end times in sec. by weekday.
+        """
+        data = utils.get_data()
+        result = utils.group_start_end_times_by_weekday(data[10])
+        self.assertIsInstance(result, dict)
+        self.assertEqual(len(result), 7)
+        self.assertEqual(result[0], {'start': [], 'end': []})
+        self.assertIsNotNone(result[1])
+        self.assertIsNotNone(result[2])
+        self.assertIsNotNone(result[3])
 
 
 def suite():
