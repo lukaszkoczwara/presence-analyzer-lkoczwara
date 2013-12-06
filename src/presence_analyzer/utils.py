@@ -8,7 +8,7 @@ from json import dumps
 from functools import wraps
 from datetime import datetime
 
-from flask import Response
+from flask import Response, abort
 
 from presence_analyzer.main import app
 
@@ -105,9 +105,9 @@ def group_start_end_times_by_weekday(items):
     """
 
     result = {i: {'start': [], 'end': []} for i in range(7)}
-    for date in items:
-        start = items[date]['start']
-        end = items[date]['end']
+    for date, start_end in items.iteritems():
+        start = start_end['start']
+        end = start_end['end']
         result[date.weekday()]['start'].append(seconds_since_midnight(start))
         result[date.weekday()]['end'].append(seconds_since_midnight(end))
     return result
