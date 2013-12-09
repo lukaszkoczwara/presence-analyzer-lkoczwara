@@ -6,6 +6,8 @@ import os.path
 import json
 import datetime
 import unittest
+import mock
+
 
 from presence_analyzer import main, utils
 
@@ -67,10 +69,8 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
 
         # user with id=56 does not exist
         resp = self.client.get('/api/v1/mean_time_weekday/56')
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.content_type, 'application/json')
-        data = json.loads(resp.data)
-        self.assertEqual(data, [])
+        self.assertEqual(resp.status_code, 401)
+        self.assertEqual(resp.content_type, 'text/html')
 
     def test_presence_weekday_view(self):
         """
@@ -86,10 +86,8 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
 
         # user with id=56 does not exist
         resp = self.client.get('/api/v1/presence_weekday/56')
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.content_type, 'application/json')
-        data = json.loads(resp.data)
-        self.assertEqual(data, [])
+        self.assertEqual(resp.status_code, 401)
+        self.assertEqual(resp.content_type, 'text/html')
 
     def test_presence_start_end_view(self):
         """
@@ -104,10 +102,8 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
 
         # user with id=56 does not exist
         resp = self.client.get('/api/v1/presence_start_end/56')
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.content_type, 'application/json')
-        data = json.loads(resp.data)
-        self.assertEqual(data, [])
+        self.assertEqual(resp.status_code, 401)
+        self.assertEqual(resp.content_type, 'text/html')
 
 
 class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
@@ -119,7 +115,7 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         """
         Before each test, set up a environment.
         """
-        main.app.config.update({'DATA_CSV': TEST_DATA_CSV})
+        pass
 
     def tearDown(self):
         """
@@ -127,31 +123,142 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         """
         pass
 
-    def test_get_data(self):
+    @mock.patch("presence_analyzer.utils.csv")
+    @mock.patch('presence_analyzer.utils.open', create=True)
+    def test_get_data_two_users(self, mock_open, csv_mock):
         """
         Test parsing of CSV file.
         """
+        #mock_open.return_value = mock.MagicMock(spec=file)
+        csv_mock.reader.return_value = [
+            ['10', '2013-01-01', '07:39:21', '15:23:01'],
+            ['11', '2013-01-01', '10:00:00', '16:00:01']
+        ]
+
         data = utils.get_data()
+
         self.assertIsInstance(data, dict)
         self.assertItemsEqual(data.keys(), [10, 11])
-        sample_date = datetime.date(2013, 9, 10)
-        self.assertIn(sample_date, data[10])
-        self.assertItemsEqual(data[10][sample_date].keys(), ['start', 'end'])
-        self.assertEqual(data[10][sample_date]['start'],
-                         datetime.time(9, 39, 5))
+        self.assertIn(datetime.date(2013, 01, 01), data[10])
+        self.assertItemsEqual(data[10][datetime.date(2013, 01, 01)].keys(),
+                              ['start', 'end'])
+        self.assertEqual(data[10][datetime.date(2013, 01, 01)]['start'],
+                         datetime.time(7, 39, 21))
 
-    def test_group_by_weekday(self):
+    @mock.patch("presence_analyzer.utils.csv")
+    @mock.patch('presence_analyzer.utils.open', create=True)
+    def test_get_data_csv_header(self, mock_open, csv_mock):
+        """
+        Test parsing of CSV file.
+        """
+        #mock_open.return_value = mock.MagicMock(spec=file)
+        csv_mock.reader.return_value = [
+            ['header'],
+            ['10', '2013-01-01', '07:39:21', '15:23:01']
+        ]
+
+        data = utils.get_data()
+
+        self.assertIsInstance(data, dict)
+        self.assertItemsEqual(data.keys(), [10])
+        self.assertIn(datetime.date(2013, 01, 01), data[10])
+        self.assertItemsEqual(data[10][datetime.date(2013, 01, 01)].keys(),
+                              ['start', 'end'])
+        self.assertEqual(data[10][datetime.date(2013, 01, 01)]['start'],
+                         datetime.time(7, 39, 21))
+
+    @mock.patch("presence_analyzer.utils.csv")
+    @mock.patch('presence_analyzer.utils.open', create=True)
+    def test_get_data_one_user_many_entries(self, mock_open, csv_mock):
+        """
+        Test parsing of CSV file.
+        """
+        mock_open.return_value = mock.MagicMock(spec=file)
+        csv_mock.reader.return_value = [
+            ['10', '2011-06-01', '08:38:43', '17:19:02'],
+            ['10', '2011-06-02', '08:31:51', '16:13:47'],
+            ['10', '2011-06-03', '08:26:05', '10:21:44'],
+            ['10', '2011-06-06', '08:40:33', '16:37:40'],
+            ['10', '2011-06-07', '15:56:10', '17:01:33'],
+            ['10', '2011-06-08', '08:45:31', '17:21:25'],
+            ['10', '2011-06-09', '08:38:38', '16:34:11'],
+            ['10', '2011-06-10', '08:41:13', '16:22:29'],
+            ['10', '2011-06-13', '09:57:07', '16:57:04'],
+            ['10', '2011-06-14', '08:35:00', '16:55:17'],
+            ['10', '2011-06-15', '08:40:46', '17:25:57'],
+            ['10', '2011-06-16', '08:16:38', '16:16:55'],
+            ['10', '2011-06-17', '08:44:08', '17:04:20'],
+            ['10', '2011-06-20', '08:21:16', '16:49:43'],
+            ['10', '2011-06-21', '08:38:52', '16:53:31'],
+            ['10', '2011-06-22', '08:36:58', '17:37:29'],
+            ['10', '2011-06-27', '08:11:44', '17:42:40'],
+            ['10', '2011-06-28', '08:22:04', '17:17:21'],
+            ['10', '2011-06-29', '08:26:27', '16:34:32'],
+            ['10', '2011-06-30', '08:34:01', '17:10:20'],
+            ['10', '2011-07-01', '08:36:29', '16:41:45']
+        ]
+
+        data = utils.get_data()
+
+        self.assertIsInstance(data, dict)
+        self.assertItemsEqual(data.keys(), [10])
+        self.assertEquals(len(data.get(10).keys()), 21)
+
+    # @mock.patch("presence_analyzer.utils.csv")
+    # @mock.patch('presence_analyzer.utils.open', create=True)
+    # def test_get_data_exception(self, mock_open, csv_mock):
+    #     print "JOSH"
+    #     """
+    #     Test parsing of CSV file.
+    #     """
+    #     mock_open.return_value = mock.MagicMock(spec=file)
+    #     csv_mock.reader.return_value = [
+    #         ['aysh', '2011-06-01', '08:38:43', '17:19:02']
+    #     ]
+    #
+    #     with self.assertRaises(ValueError):
+    #         data = utils.get_data()
+
+    @mock.patch("presence_analyzer.utils.csv")
+    @mock.patch('presence_analyzer.utils.open', create=True)
+    def test_group_by_weekday(self, mock_open, csv_mock):
         """
         Test grouping of presence entries by weekday.
         """
+        mock_open.return_value = mock.MagicMock(spec=file)
+        csv_mock.reader.return_value = [
+            ['10', '2011-06-01', '08:38:43', '17:19:02'],
+            ['10', '2011-06-02', '08:31:51', '16:13:47'],
+            ['10', '2011-06-03', '08:26:05', '10:21:44'],
+            ['10', '2011-06-06', '08:40:33', '16:37:40'],
+            ['10', '2011-06-07', '15:56:10', '17:01:33'],
+            ['10', '2011-06-08', '08:45:31', '17:21:25'],
+            ['10', '2011-06-09', '08:38:38', '16:34:11'],
+            ['10', '2011-06-10', '08:41:13', '16:22:29'],
+            ['10', '2011-06-13', '09:57:07', '16:57:04'],
+            ['10', '2011-06-14', '08:35:00', '16:55:17'],
+            ['10', '2011-06-15', '08:40:46', '17:25:57'],
+            ['10', '2011-06-16', '08:16:38', '16:16:55'],
+            ['10', '2011-06-17', '08:44:08', '17:04:20'],
+            ['10', '2011-06-20', '08:21:16', '16:49:43'],
+            ['10', '2011-06-21', '08:38:52', '16:53:31'],
+            ['10', '2011-06-22', '08:36:58', '17:37:29'],
+            ['10', '2011-06-27', '08:11:44', '17:42:40'],
+            ['10', '2011-06-28', '08:22:04', '17:17:21'],
+            ['10', '2011-06-29', '08:26:27', '16:34:32'],
+            ['10', '2011-06-30', '08:34:01', '17:10:20'],
+            ['10', '2011-07-01', '08:36:29', '16:41:45']
+        ]
         data = utils.get_data()
         result = utils.group_by_weekday(data[10])
+
         self.assertIsInstance(result, dict)
         self.assertEqual(len(result), 7)
-        self.assertEqual(result[0], [])
-        self.assertIsNotNone(result[1])
-        self.assertIsNotNone(result[2])
-        self.assertIsNotNone(result[3])
+        # 4 times for 4 Mondays
+        self.assertEqual(result[0], [34256, 28627, 25197, 30507])
+        self.assertIsNotNone(result[1], [29679, 32117, 3923, 30017])
+        self.assertIsNotNone(result[2], [31511, 32431, 31219, 29285, 30954])
+        self.assertIsNotNone(result[3], [27716, 30979, 28533, 28817])
 
     def test_seconds_since_midnight(self):
         """
@@ -187,15 +294,26 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         result = utils.mean([])
         self.assertEqual(result, 0)
 
-    def test_group_start_end_times_by_weekday(self):
+    @mock.patch("presence_analyzer.utils.csv")
+    @mock.patch('presence_analyzer.utils.open', create=True)
+    def test_group_start_end_times_by_weekday(self, mock_open, csv_mock):
         """
         Test grouping of start and end times in sec. by weekday.
         """
+        mock_open.return_value = mock.MagicMock(spec=file)
+        csv_mock.reader.return_value = [
+            ['10', '2011-06-01', '08:38:43', '17:19:02'],
+            ['10', '2011-06-02', '08:31:51', '16:13:47'],
+            ['10', '2011-06-03', '08:26:05', '10:21:44'],
+            ['10', '2011-06-06', '08:40:33', '16:37:40'],
+            ['10', '2011-06-07', '15:56:10', '17:01:33'],
+            ['10', '2011-06-08', '08:45:31', '17:21:25']
+        ]
         data = utils.get_data()
         result = utils.group_start_end_times_by_weekday(data[10])
         self.assertIsInstance(result, dict)
         self.assertEqual(len(result), 7)
-        self.assertEqual(result[0], {'start': [], 'end': []})
+        self.assertEqual(result[0], {'start': [31233], 'end': [59860]})
         self.assertIsNotNone(result[1])
         self.assertIsNotNone(result[2])
         self.assertIsNotNone(result[3])
