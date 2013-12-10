@@ -78,7 +78,13 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.content_type, 'application/json')
         self.assertEqual(resp.content_length, 96)
-        self.assertEqual(resp.data, '[["Mon", 0], ["Tue", 30600.0], ["Wed", 29700.0], ["Thu", 0], ["Fri", 0], ["Sat", 0], ["Sun", 0]]')
+        self.assertEqual(
+            resp.data,
+            '['
+            '["Mon", 0], ["Tue", 30600.0], ["Wed", 29700.0], ["Thu", 0], ' 
+            '["Fri", 0], ["Sat", 0], ["Sun", 0]' 
+            ']'
+        )
 
         data = json.loads(resp.data)
         self.assertEqual(len(data), 7)
@@ -167,6 +173,7 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         ]
 
         data = utils.get_data()
+        print "FFFFFFFFFF: ", data
 
         self.assertIsInstance(data, dict)
         self.assertItemsEqual(data.keys(), [10, 11])
