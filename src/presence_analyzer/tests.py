@@ -81,8 +81,8 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         self.assertEqual(
             resp.data,
             '['
-            '["Mon", 0], ["Tue", 30600.0], ["Wed", 29700.0], ["Thu", 0], ' 
-            '["Fri", 0], ["Sat", 0], ["Sun", 0]' 
+            '["Mon", 0], ["Tue", 30600.0], ["Wed", 29700.0], ["Thu", 0], '
+            '["Fri", 0], ["Sat", 0], ["Sun", 0]'
             ']'
         )
 
@@ -173,7 +173,6 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         ]
 
         data = utils.get_data()
-        print "FFFFFFFFFF: ", data
 
         self.assertIsInstance(data, dict)
         self.assertItemsEqual(data.keys(), [10, 11])
