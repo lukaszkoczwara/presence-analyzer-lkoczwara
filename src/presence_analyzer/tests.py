@@ -320,7 +320,6 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         """
         Test grouping of start and end times in sec. by weekday.
         """
-        mock_open.return_value = mock.MagicMock(spec=file)
         csv_mock.reader.return_value = [
             ['10', '2011-06-01', '08:38:43', '17:19:02'],
             ['10', '2011-06-02', '08:31:51', '16:13:47'],
