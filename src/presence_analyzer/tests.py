@@ -2,19 +2,13 @@
 """
 Presence analyzer unit tests.
 """
-import os.path
 import json
 import datetime
 import unittest
 import mock
 
 
-from presence_analyzer import main, utils
-
-
-TEST_DATA_CSV = os.path.join(
-    os.path.dirname(__file__), '..', '..', 'runtime', 'data', 'test_data.csv'
-)
+from presence_analyzer import main, utils, helpers
 
 
 # pylint: disable=E1103
@@ -27,14 +21,7 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         """
         Before each test, set up a environment.
         """
-        #main.app.config.update({'DATA_CSV': TEST_DATA_CSV})
         self.client = main.app.test_client()
-
-    def tearDown(self):
-        """
-        Get rid of unused objects after each test.
-        """
-        pass
 
     def test_mainpage(self):
         """
@@ -68,55 +55,99 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         self.assertEqual(len(data), 1)
         self.assertDictEqual(data[0], {u'user_id': 10, u'name': u'User 10'})
 
-    # def test_mean_time_weekday_view(self):
-    #     """
-    #     Test returning mean presence time of valid and invalid user.
-    #     """
-    #     resp = self.client.get('/api/v1/mean_time_weekday/10')
-    #     self.assertEqual(resp.status_code, 200)
-    #     self.assertEqual(resp.content_type, 'application/json')
-    #     self.assertEqual(resp.content_length, 102)
-    #     data = json.loads(resp.data)
-    #     self.assertEqual(len(data), 7)
-    #     self.assertEqual(data[0], ['Mon', 0])
-    #
-    #     # user with id=56 does not exist
-    #     resp = self.client.get('/api/v1/mean_time_weekday/56')
-    #     self.assertEqual(resp.status_code, 401)
-    #     self.assertEqual(resp.content_type, 'text/html')
-    #
-    # def test_presence_weekday_view(self):
-    #     """
-    #     Test returning total presence time of valid and invalid user.
-    #     """
-    #     resp = self.client.get('/api/v1/presence_weekday/10')
-    #     self.assertEqual(resp.status_code, 200)
-    #     self.assertEqual(resp.content_type, 'application/json')
-    #     self.assertEqual(resp.content_length, 125)
-    #     data = json.loads(resp.data)
-    #     self.assertEqual(len(data), 8)
-    #     self.assertEqual(data[0], ['Weekday', 'Presence (s)'])
-    #
-    #     # user with id=56 does not exist
-    #     resp = self.client.get('/api/v1/presence_weekday/56')
-    #     self.assertEqual(resp.status_code, 401)
-    #     self.assertEqual(resp.content_type, 'text/html')
-    #
-    # def test_presence_start_end_view(self):
-    #     """
-    #     Test returning total presence time of valid and invalid user.
-    #     """
-    #     resp = self.client.get('/api/v1/presence_start_end/10')
-    #     self.assertEqual(resp.status_code, 200)
-    #     self.assertEqual(resp.content_type, 'application/json')
-    #     data = json.loads(resp.data)
-    #     self.assertEqual(len(data), 7)
-    #     self.assertEqual(data[0], [u'Mon', 0, 0])
-    #
-    #     # user with id=56 does not exist
-    #     resp = self.client.get('/api/v1/presence_start_end/56')
-    #     self.assertEqual(resp.status_code, 401)
-    #     self.assertEqual(resp.content_type, 'text/html')
+    @mock.patch("presence_analyzer.views.utils")
+    def test_mean_time_weekday_view(self, utils_mock):
+        """
+        Test returning mean presence time of valid and invalid user.
+        """
+
+        utils_mock.get_data.return_value = {
+            10: {
+                datetime.date(2013, 10, 1): {
+                    'start': datetime.time(9, 0, 0),
+                    'end': datetime.time(17, 30, 0),
+                },
+                datetime.date(2013, 10, 2): {
+                    'start': datetime.time(8, 30, 0),
+                    'end': datetime.time(16, 45, 0),
+                },
+            }
+        }
+
+        resp = self.client.get('/api/v1/mean_time_weekday/10')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.content_type, 'application/json')
+        self.assertEqual(resp.content_length, 96)
+        self.assertEqual(resp.data, '[["Mon", 0], ["Tue", 30600.0], ["Wed", 29700.0], ["Thu", 0], ["Fri", 0], ["Sat", 0], ["Sun", 0]]')
+
+        data = json.loads(resp.data)
+        self.assertEqual(len(data), 7)
+        self.assertEqual(data[0], ['Mon', 0])
+        self.assertEqual(data[1], ['Tue', 30600.0])
+
+        # user with id=56 does not exist
+        resp = self.client.get('/api/v1/mean_time_weekday/423576')
+        self.assertEqual(resp.status_code, 401)
+        self.assertEqual(resp.content_type, 'text/html')
+
+    @mock.patch("presence_analyzer.views.utils")
+    def test_presence_weekday_view(self, utils_mock):
+        """
+        Test returning total presence time of valid and invalid user.
+        """
+        utils_mock.get_data.return_value = {
+            10: {
+                datetime.date(2013, 10, 1): {
+                    'start': datetime.time(9, 0, 0),
+                    'end': datetime.time(17, 30, 0),
+                },
+                datetime.date(2013, 10, 2): {
+                    'start': datetime.time(8, 30, 0),
+                    'end': datetime.time(16, 45, 0),
+                },
+            }
+        }
+        resp = self.client.get('/api/v1/presence_weekday/10')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.content_type, 'application/json')
+        self.assertEqual(resp.content_length, 121)
+        data = json.loads(resp.data)
+        self.assertEqual(len(data), 8)
+        self.assertEqual(data[0], ['Weekday', 'Presence (s)'])
+
+        # user with id=56 does not exist
+        resp = self.client.get('/api/v1/presence_weekday/56')
+        self.assertEqual(resp.status_code, 401)
+        self.assertEqual(resp.content_type, 'text/html')
+
+    @mock.patch("presence_analyzer.views.utils")
+    def test_presence_start_end_view(self, data_mock):
+        """
+        Test returning total presence time of valid and invalid user.
+        """
+        data_mock.get_data.return_value = {
+            10: {
+                datetime.date(2013, 10, 1): {
+                    'start': datetime.time(9, 0, 0),
+                    'end': datetime.time(17, 30, 0),
+                },
+                datetime.date(2013, 10, 2): {
+                    'start': datetime.time(8, 30, 0),
+                    'end': datetime.time(16, 45, 0),
+                },
+            }
+        }
+        resp = self.client.get('/api/v1/presence_start_end/10')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.content_type, 'application/json')
+        data = json.loads(resp.data)
+        self.assertEqual(len(data), 7)
+        self.assertEqual(data[0], [u'Mon', 0, 0])
+
+        # user with id=56 does not exist
+        resp = self.client.get('/api/v1/presence_start_end/56')
+        self.assertEqual(resp.status_code, 401)
+        self.assertEqual(resp.content_type, 'text/html')
 
 
 class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
@@ -124,25 +155,12 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
     Utility functions tests.
     """
 
-    def setUp(self):
-        """
-        Before each test, set up a environment.
-        """
-        pass
-
-    def tearDown(self):
-        """
-        Get rid of unused objects after each test.
-        """
-        pass
-
     @mock.patch("presence_analyzer.utils.csv")
     @mock.patch('presence_analyzer.utils.open', create=True)
     def test_get_data_two_users(self, mock_open, csv_mock):
         """
         Test parsing of CSV file.
         """
-        #mock_open.return_value = mock.MagicMock(spec=file)
         csv_mock.reader.return_value = [
             ['10', '2013-01-01', '07:39:21', '15:23:01'],
             ['11', '2013-01-01', '10:00:00', '16:00:01']
@@ -164,7 +182,6 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         """
         Test parsing of CSV file.
         """
-        #mock_open.return_value = mock.MagicMock(spec=file)
         csv_mock.reader.return_value = [
             ['header'],
             ['10', '2013-01-01', '07:39:21', '15:23:01']
@@ -186,7 +203,6 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         """
         Test parsing of CSV file.
         """
-        mock_open.return_value = mock.MagicMock(spec=file)
         csv_mock.reader.return_value = [
             ['10', '2011-06-01', '08:38:43', '17:19:02'],
             ['10', '2011-06-02', '08:31:51', '16:13:47'],
@@ -217,28 +233,12 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         self.assertItemsEqual(data.keys(), [10])
         self.assertEquals(len(data.get(10).keys()), 21)
 
-    # @mock.patch("presence_analyzer.utils.csv")
-    # @mock.patch('presence_analyzer.utils.open', create=True)
-    # def test_get_data_exception(self, mock_open, csv_mock):
-    #     print "JOSH"
-    #     """
-    #     Test parsing of CSV file.
-    #     """
-    #     mock_open.return_value = mock.MagicMock(spec=file)
-    #     csv_mock.reader.return_value = [
-    #         ['aysh', '2011-06-01', '08:38:43', '17:19:02']
-    #     ]
-    #
-    #     with self.assertRaises(ValueError):
-    #         data = utils.get_data()
-
     @mock.patch("presence_analyzer.utils.csv")
     @mock.patch('presence_analyzer.utils.open', create=True)
     def test_group_by_weekday(self, mock_open, csv_mock):
         """
         Test grouping of presence entries by weekday.
         """
-        mock_open.return_value = mock.MagicMock(spec=file)
         csv_mock.reader.return_value = [
             ['10', '2011-06-01', '08:38:43', '17:19:02'],
             ['10', '2011-06-02', '08:31:51', '16:13:47'],
@@ -263,10 +263,11 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
             ['10', '2011-07-01', '08:36:29', '16:41:45']
         ]
         data = utils.get_data()
-        result = utils.group_by_weekday(data[10])
+        result = helpers.group_by_weekday(data[10])
 
         self.assertIsInstance(result, dict)
         self.assertEqual(len(result), 7)
+
         # 4 times for 4 Mondays
         self.assertEqual(result[0], [34256, 28627, 25197, 30507])
         self.assertIsNotNone(result[1], [29679, 32117, 3923, 30017])
@@ -278,22 +279,22 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         Test calculation of amount of seconds since midnight.
         """
         time = datetime.datetime.strptime('09:39:05', '%H:%M:%S').time()
-        result = utils.seconds_since_midnight(time)
+        result = helpers.seconds_since_midnight(time)
         self.assertEqual(result, 34745)
 
     def test_interval(self):
         """
-        Test calculation of inverval in seconds between
+        Test calculation of interval in seconds between
         two datetime.time objects.
         """
         start = datetime.datetime.strptime('09:39:05', '%H:%M:%S').time()
         end = datetime.datetime.strptime('09:39:05', '%H:%M:%S').time()
-        result = utils.interval(start, end)
+        result = helpers.interval(start, end)
         self.assertEqual(result, 0)
 
         start = datetime.datetime.strptime('09:39:05', '%H:%M:%S').time()
         end = datetime.datetime.strptime('12:39:05', '%H:%M:%S').time()
-        result = utils.interval(start, end)
+        result = helpers.interval(start, end)
         self.assertEqual(result, 10800)
 
     def test_mean(self):
@@ -301,10 +302,10 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         Test calculation of arithmetic mean.
         Test returning zero for empty lists.
         """
-        result = utils.mean([1, 2, 3, 4])
+        result = helpers.mean([1, 2, 3, 4])
         self.assertEqual(result, 2.5)
 
-        result = utils.mean([])
+        result = helpers.mean([])
         self.assertEqual(result, 0)
 
     @mock.patch("presence_analyzer.utils.csv")
@@ -323,7 +324,7 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
             ['10', '2011-06-08', '08:45:31', '17:21:25']
         ]
         data = utils.get_data()
-        result = utils.group_start_end_times_by_weekday(data[10])
+        result = helpers.group_start_end_times_by_weekday(data[10])
         self.assertIsInstance(result, dict)
         self.assertEqual(len(result), 7)
         self.assertEqual(result[0], {'start': [31233], 'end': [59860]})
