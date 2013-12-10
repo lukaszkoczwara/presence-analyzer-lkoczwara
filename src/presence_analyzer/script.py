@@ -48,27 +48,10 @@ def make_shell():
     reqctx = app.test_request_context
     return locals()
 
-# 
-# def _init_db(debug=False, dry_run=False):
-#     """Initialize the database."""
-#     from hello import init_db
-#     print 'init_db()'
-#     if dry_run:
-#         return
-#     # Configure the application
-#     if debug:
-#         make_debug()
-#     else:
-#         make_app()
-#     # Create the tables
-#     init_db()
-
 
 def _serve(action, debug=False, dry_run=False):
     """Build paster command from 'action' and 'debug' flag."""
-    # if action == 'initdb':
-    #     # First, create the tables
-    #     return _init_db(debug=debug, dry_run=dry_run)
+
     if debug:
         config = DEBUG_INI
     else:
