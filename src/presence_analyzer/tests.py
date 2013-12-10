@@ -2,6 +2,7 @@
 """
 Presence analyzer unit tests.
 """
+import os
 import json
 import datetime
 import unittest
@@ -9,6 +10,10 @@ import mock
 
 
 from presence_analyzer import main, utils, helpers
+
+TEST_DATA_CSV = os.path.join(
+    os.path.dirname(__file__), '..', '..', 'runtime', 'data', 'test_data.csv'
+)
 
 
 # pylint: disable=E1103
@@ -21,6 +26,7 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         """
         Before each test, set up a environment.
         """
+        main.app.config.update({'DATA_CSV': TEST_DATA_CSV})
         self.client = main.app.test_client()
 
     def test_mainpage(self):
@@ -160,6 +166,11 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
     """
     Utility functions tests.
     """
+    def setUp(self):
+        """
+        Before each test, set up a environment.
+        """
+        main.app.config.update({'DATA_CSV': TEST_DATA_CSV})
 
     @mock.patch("presence_analyzer.utils.csv")
     @mock.patch('presence_analyzer.utils.open', create=True)
