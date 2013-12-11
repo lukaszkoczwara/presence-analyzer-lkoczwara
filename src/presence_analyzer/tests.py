@@ -4,6 +4,7 @@ Presence analyzer unit tests.
 """
 import os
 import json
+
 import datetime
 import unittest
 import mock
@@ -31,11 +32,24 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
 
     def test_mainpage(self):
         """
-        Test main page redirect.
+        Test rendering of main page.
         """
         resp = self.client.get('/')
-        self.assertEqual(resp.status_code, 302)
-        assert resp.headers['Location'].endswith('/presence_weekday.html')
+        self.assertEqual(resp.status_code, 200)
+
+    def test_mean_time_page(self):
+        """
+        Test rendering of mean_time_page.
+        """
+        resp = self.client.get('/mean_time')
+        self.assertEqual(resp.status_code, 200)
+
+    def test_start_end_page(self):
+        """
+        Test rendering of start-end page.
+        """
+        resp = self.client.get('/start_end')
+        self.assertEqual(resp.status_code, 200)
 
     @mock.patch("presence_analyzer.views.utils")
     def test_api_users(self, data_mock):
@@ -135,7 +149,7 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
     @mock.patch("presence_analyzer.views.utils")
     def test_presence_start_end_view(self, data_mock):
         """
-        Test returning total presence time of valid and invalid user.
+        Test returning start end time of valid and invalid user.
         """
         data_mock.get_data.return_value = {
             10: {
@@ -176,13 +190,12 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
     @mock.patch('presence_analyzer.utils.open', create=True)
     def test_get_data_two_users(self, mock_open, csv_mock):
         """
-        Test parsing of CSV file.
+        Test test_get_data_two_users
         """
         csv_mock.reader.return_value = [
             ['10', '2013-01-01', '07:39:21', '15:23:01'],
             ['11', '2013-01-01', '10:00:00', '16:00:01']
         ]
-
         data = utils.get_data()
 
         self.assertIsInstance(data, dict)
@@ -195,9 +208,22 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
 
     @mock.patch("presence_analyzer.utils.csv")
     @mock.patch('presence_analyzer.utils.open', create=True)
+    def test_invalid_data(self, mock_open, csv_mock):
+        """
+        Test invalid user.
+        """
+        csv_mock.reader.return_value = [
+            ['sdasfdew', '2013-01-01', '07:39:21', '15:23:01'],
+        ]
+        data = utils.get_data()
+        self.assertIsInstance(data, dict)
+        self.assertEqual(data, {})
+
+    @mock.patch("presence_analyzer.utils.csv")
+    @mock.patch('presence_analyzer.utils.open', create=True)
     def test_get_data_csv_header(self, mock_open, csv_mock):
         """
-        Test parsing of CSV file.
+        Test test_get_data_csv_header
         """
         csv_mock.reader.return_value = [
             ['header'],
@@ -218,7 +244,7 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
     @mock.patch('presence_analyzer.utils.open', create=True)
     def test_get_data_one_user_many_entries(self, mock_open, csv_mock):
         """
-        Test parsing of CSV file.
+        Test test_get_data_one_user_many_entries
         """
         csv_mock.reader.return_value = [
             ['10', '2011-06-01', '08:38:43', '17:19:02'],
