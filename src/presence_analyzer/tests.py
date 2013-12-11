@@ -2,6 +2,7 @@
 """
 Presence analyzer unit tests.
 """
+import os
 import json
 import datetime
 import unittest
@@ -9,6 +10,10 @@ import mock
 
 
 from presence_analyzer import main, utils, helpers
+
+TEST_DATA_CSV = os.path.join(
+    os.path.dirname(__file__), '..', '..', 'runtime', 'data', 'test_data.csv'
+)
 
 
 # pylint: disable=E1103
@@ -21,6 +26,7 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         """
         Before each test, set up a environment.
         """
+        main.app.config.update({'DATA_CSV': TEST_DATA_CSV})
         self.client = main.app.test_client()
 
     def test_mainpage(self):
@@ -160,6 +166,11 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
     """
     Utility functions tests.
     """
+    def setUp(self):
+        """
+        Before each test, set up a environment.
+        """
+        main.app.config.update({'DATA_CSV': TEST_DATA_CSV})
 
     @mock.patch("presence_analyzer.utils.csv")
     @mock.patch('presence_analyzer.utils.open', create=True)
@@ -320,7 +331,6 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         """
         Test grouping of start and end times in sec. by weekday.
         """
-        mock_open.return_value = mock.MagicMock(spec=file)
         csv_mock.reader.return_value = [
             ['10', '2011-06-01', '08:38:43', '17:19:02'],
             ['10', '2011-06-02', '08:31:51', '16:13:47'],
