@@ -68,12 +68,18 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
                 },
             }
         }
+        data_mock.get_user_data.return_value = {
+            10: {
+                    'avatar': "http://foo",
+                    'name': "Maciej",
+                }
+        }
         resp = self.client.get('/api/v1/users')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.content_type, 'application/json')
         data = json.loads(resp.data)
         self.assertEqual(len(data), 1)
-        self.assertDictEqual(data[0], {u'user_id': 10, u'name': u'User 10'})
+        self.assertDictEqual(data[0], {u'user_id': 10, u'name': u'anonymous', u'avatar': None})
 
     @mock.patch("presence_analyzer.views.utils")
     def test_mean_time_weekday_view(self, utils_mock):
