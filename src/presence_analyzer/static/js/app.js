@@ -4,6 +4,13 @@ function parseInterval(value) {
     return result;
 }
 
+
+function show_avatar(avatar_url){
+    $('#user_data').empty()
+    $('#user_data').append($('<img />').attr('src', avatar_url));
+}
+
+
 (function ($) {
     $(document).ready(function () {
 
@@ -14,7 +21,8 @@ function parseInterval(value) {
             var dropdown = $("#user_id");
 
             $.each(result, function (item) {
-                dropdown.append($("<option />").val(this.user_id).text(this.name));
+                // add avatar
+                dropdown.append($("<option />").attr('data-avatar', this.avatar).val(this.user_id).text(this.name));
             });
             dropdown.show();
             loading.hide();
@@ -24,6 +32,9 @@ function parseInterval(value) {
             var selected_user = $("#user_id").val(),
                 chart_div = $('#chart_div'),
                 name = $('#selected').attr('name');
+            // add avatar variable and call function
+            var avatar_url = $('#user_id option[value=' + selected_user + ']').data('avatar')
+                show_avatar(avatar_url);
 
             if (selected_user) {
                 loading.show();

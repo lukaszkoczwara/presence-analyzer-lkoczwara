@@ -47,8 +47,21 @@ def users_view():
     Users listing for dropdown.
     """
     data = utils.get_data()
-    return [{'user_id': i, 'name': 'User {0}'.format(str(i))}
-            for i in data.keys()]
+    users_data = utils.get_user_data()
+
+    return_data = []
+    for i in data.keys():
+        user_data = users_data.get(str(i), None)
+        if user_data:
+            real_user_name = user_data.get('name')
+            user_avatar = user_data.get('avatar')
+        else:
+            real_user_name = "anonymous"
+            user_avatar = None
+
+        return_data.append({'user_id': i, 'name': real_user_name, 'avatar': user_avatar})
+
+    return return_data
 
 
 @app.route('/api/v1/mean_time_weekday/<int:user_id>', methods=['GET'])

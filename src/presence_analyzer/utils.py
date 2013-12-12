@@ -4,12 +4,14 @@ Helper functions used in views.
 """
 
 import csv
+from lxml import etree
 
 from datetime import datetime
 from presence_analyzer.main import app
 
 import logging
 log = logging.getLogger(__name__)  # pylint: disable-msg=C0103
+
 
 
 def get_data():
@@ -53,3 +55,42 @@ def get_data():
                 log.debug('Problem with line %d: ', i, exc_info=True)
 
     return data
+
+
+def get_user_data():
+    """
+    avatar: https://intranet.stxnext.pl/api/images/users/141
+
+    Returned data structure:
+
+    user_data = {
+
+        'user_id' : { 'user_name' : <name>,
+                      'user_avatar' : <avatar_url>
+                    },
+        ...
+    }
+
+    """
+
+    user_data = {}
+    with open(app.config['USERS_XML'], 'r') as xmlfile:
+        parser = etree.parse(xmlfile)
+        root = parser.getroot()
+        host = root.find('server/host').text
+        protocol = root.find('server/protocol').text
+        for element in root.find('users').iterchildren():
+            user_id = element.get('id')
+            for child in element:
+                if child.tag == "avatar":
+                    user_avatar = child.text
+                if child.tag == "name":
+                    user_name = child.text
+
+            if user_id:
+                user_data[user_id] = {
+                    'avatar': '{0}://{1}{2}'.format(protocol, host, user_avatar),
+                    'name': user_name
+                }
+
+    return user_data
