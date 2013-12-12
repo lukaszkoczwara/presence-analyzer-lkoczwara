@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% set active_page = "presense_weekday" %}
+
+{% block js_logic %}
+    google.load("visualization", "1", {packages:["corechart"], 'language': 'en'});
+{% endblock js_logic %}

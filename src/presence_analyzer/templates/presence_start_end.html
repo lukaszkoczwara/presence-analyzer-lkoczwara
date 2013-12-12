@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% set active_page = "start_end" %}
+
+{% block js_logic %}
+    google.load("visualization", "1", {packages:["corechart", "timeline"], 'language': 'pl'});
+{% endblock js_logic %}
+

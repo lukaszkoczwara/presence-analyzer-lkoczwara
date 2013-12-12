@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang=en>
+<head>
+    <meta charset=utf-8>
+    <title>Presence analyzer</title>
+    <meta name="keywords" content="" />
+    <meta name="description" content=""/>
+    <meta name="author" content="STX Next sp. z o.o."/>
+    <!--<meta name="viewport" content="width=device-width; initial-scale=1.0">-->
+    
+    <link href="{{ url_for('static', filename='css/normalize.css') }}" media="all" rel="stylesheet" href="text/css" />
+    <link href="{{ url_for('static', filename='css/style.css') }}" media="all" rel="stylesheet" href="text/css" />
+
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+        {% block js_logic %}
+        {% endblock js_logic %}
+    </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</head>
+
+<body>
+    <div id="main">
+        <div id="header">
+            <h1>Presence analyzer</h1>
+            
+            <ul>
+                <li name="presense_weekday" {% if active_page=='presense_weekday' %} id="selected"  {% endif %}><a href="/">Presence by weekday</a></li>
+                <li name="mean_time" {% if active_page=='mean_time' %} id="selected" {% endif %}><a href="/mean_time">Presence mean time</a></li>
+                <li name="start_end" {% if active_page=='start_end' %} id="selected" {% endif %}><a href="/start_end">Presence start-end</a></li>
+            </ul>
+        </div>
+        <div id="content">
+            <h2>{{active_page}}</h2>
+            <p>
+                <select id="user_id" style="display: none">
+                    <option value="">--</option>
+                </select>
+                <div id="chart_div" style="display: none">
+                </div>
+                <div id="loading">
+                    <img src="/static/img/loading.gif" />
+                </div>
+            </p>
+        </div>
+
+    </div>
+</body>
+</html>
