@@ -4,6 +4,13 @@ function parseInterval(value) {
     return result;
 }
 
+
+function show_avatar(avatar_url) {
+    $('#user_data').empty()
+    $('#user_data').append($('<img />').attr('src', avatar_url));
+}
+
+
 (function ($) {
     $(document).ready(function () {
 
@@ -14,7 +21,8 @@ function parseInterval(value) {
             var dropdown = $("#user_id");
 
             $.each(result, function (item) {
-                dropdown.append($("<option />").val(this.user_id).text(this.name));
+                // add avatar
+                dropdown.append($("<option />").attr('data-avatar', this.avatar).val(this.user_id).text(this.name));
             });
             dropdown.show();
             loading.hide();
@@ -23,11 +31,17 @@ function parseInterval(value) {
 
             var selected_user = $("#user_id").val(),
                 chart_div = $('#chart_div'),
-                name = $('#selected').attr('name');
+                name = $('#selected').attr('name'),
+                // add avatar variable and call function
+                avatar_url = $('#user_id option[value=' + selected_user + ']').data('avatar');
+            show_avatar(avatar_url);
 
-            if (selected_user) {
-                loading.show();
+            if (selected_user === '') {
+                // hide previous chart if user is not selected
                 chart_div.hide();
+            } else {
+                chart_div.hide();
+                loading.show();
 
                 if (name === "mean_time") {
                     $.getJSON("/api/v1/mean_time_weekday/" + selected_user, function (result) {

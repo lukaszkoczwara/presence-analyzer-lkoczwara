@@ -5,6 +5,7 @@ Helper functions used in views.
 
 import csv
 
+from lxml import etree
 from datetime import datetime
 from presence_analyzer.main import app
 
@@ -31,7 +32,7 @@ def get_data():
     }
     """
     data = {}
-    with open(app.config['DATA_CSV'], 'r') as csvfile:
+    with open(app.config['DATA_CSV'], 'rb') as csvfile:
         presence_reader = csv.reader(csvfile, delimiter=',')
         for i, row in enumerate(presence_reader):
             if len(row) != 4:
@@ -53,3 +54,42 @@ def get_data():
                 log.debug('Problem with line %d: ', i, exc_info=True)
 
     return data
+
+
+def get_user_data():
+    """
+    avatar: https://intranet.stxnext.pl/api/images/users/141
+
+    Returned data structure:
+
+    user_data = {
+
+        'user_id' : { 'user_name' : <name>,
+                      'user_avatar' : <avatar_url>
+                    },
+        ...
+    }
+
+    """
+
+    user_data = {}
+    with open(app.config['USERS_XML'], 'rb') as xmlfile:
+        parser = etree.parse(xmlfile)
+        root = parser.getroot()
+        host = root.find('server/host').text
+        protocol = root.find('server/protocol').text
+        for element in root.find('users').iterchildren():
+            user_id = int(element.get('id'))
+            user_avatar = element.find('avatar').text
+            user_name = element.find('name').text
+
+            user_data[user_id] = {
+                'avatar': '{0}://{1}{2}'.format(
+                    protocol,
+                    host,
+                    user_avatar
+                ),
+                'name': user_name
+            }
+
+    return user_data

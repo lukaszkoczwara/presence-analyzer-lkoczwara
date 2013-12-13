@@ -47,8 +47,18 @@ def users_view():
     Users listing for dropdown.
     """
     data = utils.get_data()
-    return [{'user_id': i, 'name': 'User {0}'.format(str(i))}
-            for i in data.keys()]
+    users_info = utils.get_user_data()
+
+    return_data = [
+        {
+            'user_id': user_id,
+            'name': user_data['name'],
+            'avatar': user_data['avatar']
+        }
+        for user_id, user_data in users_info.iteritems() if user_id in data
+    ]
+
+    return return_data
 
 
 @app.route('/api/v1/mean_time_weekday/<int:user_id>', methods=['GET'])
