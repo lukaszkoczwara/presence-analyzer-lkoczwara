@@ -4,16 +4,19 @@ Presence analyzer unit tests.
 """
 import os
 import json
-
 import datetime
 import unittest
 import mock
 
+from StringIO import StringIO
 
 from presence_analyzer import main, utils, helpers
 
 TEST_DATA_CSV = os.path.join(
     os.path.dirname(__file__), '..', '..', 'runtime', 'data', 'test_data.csv'
+)
+TEST_USERS_XML = os.path.join(
+    os.path.dirname(__file__), '..', '..', 'runtime', 'data', 'users.xml'
 )
 
 
@@ -52,7 +55,7 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
 
     @mock.patch("presence_analyzer.views.utils")
-    def test_api_users(self, data_mock):
+    def test_api_users_valid_user(self, data_mock):
         """
         Test users listing.
         """
@@ -70,8 +73,46 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         }
         data_mock.get_user_data.return_value = {
             10: {
-                    'avatar': "http://foo",
-                    'name': "Maciej",
+                'avatar': 'http:///api/images/users/170',
+                'name': 'Agata Juszczak',
+                }
+        }
+        resp = self.client.get('/api/v1/users')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.content_type, 'application/json')
+        data = json.loads(resp.data)
+        print data
+        self.assertEqual(len(data), 1)
+        self.assertDictEqual(
+            data[0],
+            {
+                'user_id': 10,
+                'name': 'Agata Juszczak',
+                'avatar': 'http:///api/images/users/170',
+            }
+        )
+
+    @mock.patch("presence_analyzer.views.utils")
+    def test_api_users_invalid_user(self, data_mock):
+        """
+        Test users listing.
+        """
+        data_mock.get_data.return_value = {
+            10: {
+                datetime.date(2013, 10, 1): {
+                    'start': datetime.time(9, 0, 0),
+                    'end': datetime.time(17, 30, 0),
+                },
+                datetime.date(2013, 10, 2): {
+                    'start': datetime.time(8, 30, 0),
+                    'end': datetime.time(16, 45, 0),
+                },
+            }
+        }
+        data_mock.get_user_data.return_value = {
+            170: {
+                'avatar': 'http:///api/images/users/170',
+                'name': 'Agata Juszczak',
                 }
         }
         resp = self.client.get('/api/v1/users')
@@ -79,7 +120,14 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         self.assertEqual(resp.content_type, 'application/json')
         data = json.loads(resp.data)
         self.assertEqual(len(data), 1)
-        self.assertDictEqual(data[0], {u'user_id': 10, u'name': u'anonymous', u'avatar': None})
+        self.assertDictEqual(
+            data[0],
+            {
+                'user_id': 10,
+                'name': 'anonymous',
+                'avatar': None,
+            }
+        )
 
     @mock.patch("presence_analyzer.views.utils")
     def test_mean_time_weekday_view(self, utils_mock):
@@ -190,7 +238,52 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         """
         Before each test, set up a environment.
         """
-        main.app.config.update({'DATA_CSV': TEST_DATA_CSV})
+        main.app.config.update(
+            {
+                'DATA_CSV': TEST_DATA_CSV,
+                'USERS_XML': TEST_USERS_XML,
+            }
+        )
+
+    @mock.patch('presence_analyzer.utils.open', create=True)
+    def test_get_user_data(self, mock_open):
+        """
+        Test test_get_user_data.
+        """
+        test_lines = u"""
+<intranet>
+    <server>
+        <host>intranet.stxnext.pl</host>
+        <port>443</port>
+        <protocol>https</protocol>
+    </server>
+    <users>
+        <user id="141">
+            <avatar>/api/images/users/141</avatar>
+            <name>John Travolta</name>
+        </user>
+        <user id="176">
+            <avatar>/api/images/users/176</avatar>
+            <name>Adrian Kruszewski</name>
+        </user>
+    </users>
+</intranet>
+"""
+        mock_open.return_value.__enter__.return_value = StringIO(test_lines)
+        data = utils.get_user_data()
+
+        self.assertIsInstance(data, dict)
+        self.assertItemsEqual(data.keys(), [141, 176])
+        self.assertItemsEqual(data[141].get('name'), 'John Travolta')
+        self.assertItemsEqual(data[176].get('name'), 'Adrian Kruszewski')
+        self.assertItemsEqual(
+            data[141].get('avatar'),
+            'https://intranet.stxnext.pl/api/images/users/141'
+        )
+        self.assertItemsEqual(
+            data[176].get('avatar'),
+            'https://intranet.stxnext.pl/api/images/users/176'
+        )
 
     @mock.patch("presence_analyzer.utils.csv")
     @mock.patch('presence_analyzer.utils.open', create=True)

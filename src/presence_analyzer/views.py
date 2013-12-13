@@ -51,15 +51,21 @@ def users_view():
 
     return_data = []
     for i in data.keys():
-        user_data = users_data.get(str(i), None)
+        user_data = users_data.get(i, None)
         if user_data:
             real_user_name = user_data.get('name')
             user_avatar = user_data.get('avatar')
         else:
-            real_user_name = "anonymous"
+            real_user_name = 'anonymous'
             user_avatar = None
 
-        return_data.append({'user_id': i, 'name': real_user_name, 'avatar': user_avatar})
+        return_data.append(
+            {
+                'user_id': i,
+                'name': real_user_name,
+                'avatar': user_avatar
+            }
+        )
 
     return return_data
 

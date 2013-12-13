@@ -5,7 +5,7 @@ function parseInterval(value) {
 }
 
 
-function show_avatar(avatar_url){
+function show_avatar(avatar_url) {
     $('#user_data').empty()
     $('#user_data').append($('<img />').attr('src', avatar_url));
 }
@@ -31,14 +31,17 @@ function show_avatar(avatar_url){
 
             var selected_user = $("#user_id").val(),
                 chart_div = $('#chart_div'),
-                name = $('#selected').attr('name');
-            // add avatar variable and call function
-            var avatar_url = $('#user_id option[value=' + selected_user + ']').data('avatar')
-                show_avatar(avatar_url);
+                name = $('#selected').attr('name'),
+                // add avatar variable and call function
+                avatar_url = $('#user_id option[value=' + selected_user + ']').data('avatar');
+            show_avatar(avatar_url);
 
-            if (selected_user) {
-                loading.show();
+            if (selected_user === '') {
+                // hide previous chart if user is not selected
                 chart_div.hide();
+            } else {
+                chart_div.hide();
+                loading.show();
 
                 if (name === "mean_time") {
                     $.getJSON("/api/v1/mean_time_weekday/" + selected_user, function (result) {

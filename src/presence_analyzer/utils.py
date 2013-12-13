@@ -4,14 +4,13 @@ Helper functions used in views.
 """
 
 import csv
-from lxml import etree
 
+from lxml import etree
 from datetime import datetime
 from presence_analyzer.main import app
 
 import logging
 log = logging.getLogger(__name__)  # pylint: disable-msg=C0103
-
 
 
 def get_data():
@@ -33,7 +32,7 @@ def get_data():
     }
     """
     data = {}
-    with open(app.config['DATA_CSV'], 'r') as csvfile:
+    with open(app.config['DATA_CSV'], 'rb') as csvfile:
         presence_reader = csv.reader(csvfile, delimiter=',')
         for i, row in enumerate(presence_reader):
             if len(row) != 4:
@@ -74,13 +73,13 @@ def get_user_data():
     """
 
     user_data = {}
-    with open(app.config['USERS_XML'], 'r') as xmlfile:
+    with open(app.config['USERS_XML'], 'rb') as xmlfile:
         parser = etree.parse(xmlfile)
         root = parser.getroot()
         host = root.find('server/host').text
         protocol = root.find('server/protocol').text
         for element in root.find('users').iterchildren():
-            user_id = element.get('id')
+            user_id = int(element.get('id'))
             for child in element:
                 if child.tag == "avatar":
                     user_avatar = child.text
@@ -89,8 +88,11 @@ def get_user_data():
 
             if user_id:
                 user_data[user_id] = {
-                    'avatar': '{0}://{1}{2}'.format(protocol, host, user_avatar),
+                    'avatar': '{0}://{1}{2}'.format(
+                        protocol,
+                        host,
+                        user_avatar
+                    ),
                     'name': user_name
                 }
-
     return user_data

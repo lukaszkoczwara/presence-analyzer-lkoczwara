@@ -6,6 +6,10 @@ from functools import partial
 
 import paste.script.command
 import werkzeug.script
+import requests
+
+import logging
+log = logging.getLogger(__name__)  # pylint: disable-msg=C0103
 
 etc = partial(os.path.join, 'parts', 'etc')
 
@@ -111,3 +115,18 @@ def run():
         _serve('stop', dry_run=dry_run)
 
     werkzeug.script.run()
+
+
+def get_users_xml_data():
+    """
+    Get users.xml files and save if on disk.
+    """
+    app = make_app()
+    users_data_url = app.config['USERS_XML_URL']
+    r = requests.get(users_data_url, timeout=0.5)
+
+    if not r.status_code == requests.codes.ok:
+        log.error("ohhh snap! you epically failed to pull new data!")
+    else:
+        with open(app.config['USERS_XML'], "wb") as data_file:
+            data_file.write(r.text.encode(r.encoding))
