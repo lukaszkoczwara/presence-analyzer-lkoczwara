@@ -49,11 +49,11 @@ def users_view():
     data = utils.get_data()
     users_data = utils.get_user_data()
     return_data = [
-        {'user_id': i,
-         'name': users_data[i].get('name'),
-         'avatar': users_data[i].get('avatar')
+        {'user_id': user_id,
+         'name': users_data[user_id].get('name'),
+         'avatar': users_data[user_id].get('avatar')
         }
-        for i in users_data.keys() if i in data.keys()
+        for user_id in users_data.keys() if user_id in data.keys()
     ]
 
     return return_data
