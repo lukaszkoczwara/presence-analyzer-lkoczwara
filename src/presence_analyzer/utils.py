@@ -80,19 +80,16 @@ def get_user_data():
         protocol = root.find('server/protocol').text
         for element in root.find('users').iterchildren():
             user_id = int(element.get('id'))
-            for child in element:
-                if child.tag == "avatar":
-                    user_avatar = child.text
-                if child.tag == "name":
-                    user_name = child.text
+            user_avatar = element.find('avatar').text
+            user_name = element.find('name').text
 
-            if user_id:
-                user_data[user_id] = {
-                    'avatar': '{0}://{1}{2}'.format(
-                        protocol,
-                        host,
-                        user_avatar
-                    ),
-                    'name': user_name
-                }
+            user_data[user_id] = {
+                'avatar': '{0}://{1}{2}'.format(
+                    protocol,
+                    host,
+                    user_avatar
+                ),
+                'name': user_name
+            }
+
     return user_data

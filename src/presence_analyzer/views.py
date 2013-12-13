@@ -48,24 +48,13 @@ def users_view():
     """
     data = utils.get_data()
     users_data = utils.get_user_data()
-
-    return_data = []
-    for i in data.keys():
-        user_data = users_data.get(i, None)
-        if user_data:
-            real_user_name = user_data.get('name')
-            user_avatar = user_data.get('avatar')
-        else:
-            real_user_name = 'anonymous'
-            user_avatar = None
-
-        return_data.append(
-            {
-                'user_id': i,
-                'name': real_user_name,
-                'avatar': user_avatar
-            }
-        )
+    return_data = [
+        {'user_id': i,
+         'name': users_data[i].get('name'),
+         'avatar': users_data[i].get('avatar')
+        }
+        for i in users_data.keys() if i in data.keys()
+    ]
 
     return return_data
 
