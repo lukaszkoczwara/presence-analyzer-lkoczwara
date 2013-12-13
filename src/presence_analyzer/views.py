@@ -47,13 +47,15 @@ def users_view():
     Users listing for dropdown.
     """
     data = utils.get_data()
-    users_data = utils.get_user_data()
+    users_info = utils.get_user_data()
+
     return_data = [
-        {'user_id': user_id,
-         'name': users_data[user_id].get('name'),
-         'avatar': users_data[user_id].get('avatar')
+        {
+            'user_id': user_id,
+            'name': user_data['name'],
+            'avatar': user_data['avatar']
         }
-        for user_id in users_data.keys() if user_id in data.keys()
+        for user_id, user_data in users_info.iteritems() if user_id in data
     ]
 
     return return_data
