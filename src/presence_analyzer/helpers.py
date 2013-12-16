@@ -5,7 +5,52 @@ Helper functions used in views.
 
 from json import dumps
 from functools import wraps
+import threading
+import time
 from flask import Response
+import venusian
+
+
+class memoized(object):
+
+    def __init__(self, cache_time=100):
+        self.cache = {}
+        self.cache_time = cache_time
+        self.lock = threading.Lock()
+        self.cache_until = time.time() + cache_time
+
+    def __call__(self, func):
+        def wrapper(*args, **kwargs):
+            cache_expired = self.cache_until - time.time() <= 0
+            with self.lock:
+                if args not in self.cache or cache_expired:
+                    self.cache[args] = func(*args, **kwargs)
+                    self.cache_until = time.time() + self.cache_time
+                return self.cache[args]
+        return wrapper
+
+
+# class memoized(object):
+# 
+#     def __init__(self, cache_time=100):
+#         self.cache = {}
+#         self.cache_time = cache_time
+#         self.lock = threading.Lock()
+#         self.cache_until = time.time() + cache_time
+# 
+#     def __call__(self, func):
+#         def callback(scanner, name, ob):
+#             def wrapper(*args, **kwargs):
+#                 cache_expired = self.cache_until - time.time() <= 0
+#                 with self.lock:
+#                     if args not in self.cache or cache_expired:
+#                         self.cache[args] = func(*args, **kwargs)
+#                         self.cache_until = time.time() + self.cache_time
+#                     return self.cache[args]
+#             scanner.registry.add(name, wrapper)
+#         venusian.attach(func, callback)
+#         return func
+
 
 
 def jsonify(function):

@@ -4,6 +4,8 @@ import os
 import sys
 from functools import partial
 
+import venusian
+
 import paste.script.command
 import werkzeug.script
 import requests
@@ -48,6 +50,8 @@ def make_shell():
     from flask import request
     #from hello import init_db as initdb
     app = make_app()
+    #scanner = venusian.Scanner()
+    #scanner.scan(app)
     http = app.test_client()
     reqctx = app.test_request_context
     return locals()
@@ -85,6 +89,8 @@ def _serve(action, debug=False, dry_run=False):
 # bin/flask-ctl ...
 def run():
     action_shell = werkzeug.script.make_shell(make_shell, make_shell.__doc__)
+    
+    
 
     # bin/flask-ctl serve [fg|start|stop|restart|status|initdb]
     def action_serve(action=('a', 'start'), dry_run=False):

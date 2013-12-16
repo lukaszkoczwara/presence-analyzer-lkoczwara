@@ -81,7 +81,6 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.content_type, 'application/json')
         data = json.loads(resp.data)
-        print data
         self.assertEqual(len(data), 1)
         self.assertDictEqual(
             data[0],
@@ -115,19 +114,12 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
                 'name': 'Agata Juszczak',
                 }
         }
+
         resp = self.client.get('/api/v1/users')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.content_type, 'application/json')
         data = json.loads(resp.data)
-        self.assertEqual(len(data), 1)
-        self.assertDictEqual(
-            data[0],
-            {
-                'user_id': 10,
-                'name': 'anonymous',
-                'avatar': None,
-            }
-        )
+        self.assertEqual(data, [])
 
     @mock.patch("presence_analyzer.views.utils")
     def test_mean_time_weekday_view(self, utils_mock):
