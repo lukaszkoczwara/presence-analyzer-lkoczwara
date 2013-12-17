@@ -10,13 +10,13 @@ from lxml import etree
 from datetime import datetime
 
 from presence_analyzer.main import app
-from presence_analyzer.helpers import memoized
+from presence_analyzer.decorators import memoized
 
 import logging
 log = logging.getLogger(__name__)  # pylint: disable-msg=C0103
 
 
-@memoized(10)
+@memoized(60)
 def get_data():
     """
     Extracts presence data from CSV file and groups it by user_id.

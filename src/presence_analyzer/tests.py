@@ -2,15 +2,17 @@
 """
 Presence analyzer unit tests.
 """
+
 import os
 import json
+import mock
 import datetime
 import unittest
-import mock
 
 from StringIO import StringIO
 
-from presence_analyzer import main, utils, helpers
+from presence_analyzer import main, helpers, utils
+
 
 TEST_DATA_CSV = os.path.join(
     os.path.dirname(__file__), '..', '..', 'runtime', 'data', 'test_data.csv'
@@ -467,6 +469,7 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
 
 
 def suite():
+
     """
     Default test suite.
     """

@@ -10,7 +10,7 @@ from flask import render_template
 from presence_analyzer.main import app
 from presence_analyzer import utils
 from presence_analyzer import helpers
-
+from presence_analyzer.decorators import jsonify
 
 import logging
 log = logging.getLogger(__name__)  # pylint: disable-msg=C0103
@@ -41,7 +41,7 @@ def start_end_page():
 
 
 @app.route('/api/v1/users', methods=['GET'])
-@helpers.jsonify
+@jsonify
 def users_view():
     """
     Users listing for dropdown.
@@ -62,7 +62,7 @@ def users_view():
 
 
 @app.route('/api/v1/mean_time_weekday/<int:user_id>', methods=['GET'])
-@helpers.jsonify
+@jsonify
 def mean_time_weekday_view(user_id):
     """
     Returns mean presence time of given user grouped by weekday.
@@ -79,7 +79,7 @@ def mean_time_weekday_view(user_id):
 
 
 @app.route('/api/v1/presence_weekday/<int:user_id>', methods=['GET'])
-@helpers.jsonify
+@jsonify
 def presence_weekday_view(user_id):
     """
     Returns total presence time of given user grouped by weekday.
@@ -97,7 +97,7 @@ def presence_weekday_view(user_id):
 
 
 @app.route('/api/v1/presence_start_end/<int:user_id>', methods=['GET'])
-@helpers.jsonify
+@jsonify
 def presence_start_end_view(user_id):
     """
     Returns mean arrival and departure time for each weekday.
